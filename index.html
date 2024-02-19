@@ -131,6 +131,7 @@
 
         .movie .__movie-genres {
             font-style: italic;
+            text-transform: capitalize;
         }
 
         @media(min-width: 40rem) {
@@ -151,12 +152,10 @@
             <input type="text" id="searchInput" placeholder="Search for a movie">
             <button id="searchButton">Search</button>
         </div>
-        <div id="autoComplete">
+        <aside id="autoComplete">
             <ul></ul>
-        </div>
+        </aside>
     </header>
-
-
 
     <section id="results">
         <h2>Use the search bar above to find excellent movies</h2>
@@ -251,9 +250,8 @@
                 // Convert movie duration from seconds to human-readable form with helper function
                 movieElement.querySelector('.__movie-duration').innerHTML = timeHelper(movie.duration);
 
-                // Deal with the array of genres, capitalize first letter with helper function
-                let genres = movie.genres.map(genre => capitalizationHelper(genre));
-                movieElement.querySelector('.__movie-genres').innerHTML = genres.join(', ');
+                // Merge array of genres
+                movieElement.querySelector('.__movie-genres').innerHTML = movie.genres.join(', ');
 
                 movieElement.querySelector('.__movie-description').innerHTML = movie.description;
 
@@ -266,10 +264,6 @@
             let minutes = 0 + Math.floor((seconds % 3600) / 60);
 
             return hours + ' hours ' + minutes + ' minutes';
-        }
-
-        function capitalizationHelper(word) {
-            return word.charAt(0).toUpperCase() + word.substring(1);
         }
     </script>
 </body>
