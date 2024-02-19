@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Movie Search</title>
+    <style>
+        /* Resets and sets variables */
+        :root {
+            --fontFamily: system-ui, sans-serif;
+            --lightColor: #F0F0F0;
+            --darkColor: #333;
+            --gridCols: 2;
+            --gridPadding: 1rem;
+        }
+
+        *, *:before, *:after, *:focus {
+            margin: 0;
+            padding: 0;
+            font-family: var(--fontFamily);
+            box-sizing: border-box;
+            margin-bottom: 1em;
+            outline: 0;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* Element properties and styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--darkColor);
+            color: var(--lightColor);
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            height: 25vh;
+        }
+
+        .search-wrapper {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #searchInput {
+            padding: 0.8rem;
+            border-radius: 5px 0 0 5px;
+            border: 0;
+            color: var(--darkColor);
+        }
+
+        #searchButton {
+            padding: 0.8rem;
+            background-color: #007bff;
+            border-radius: 0 5px 5px 0;
+            border: 0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        #searchButton:hover {
+            background-color: #0056b3;
+        }
+
+        #results {
+            display: grid;
+            grid-template-columns: repeat(var(--gridCols), 1fr);
+            grid-gap: var(--gridPadding);
+            max-width: 900px;
+            margin-inline: auto;
+            padding-inline: var(--gridPadding);
+        }
+
+        #results > h2,
+        #results > p {
+            justify-self: center;
+            grid-column: 1 / calc(var(--gridCols) + 1)
+        }
+
+        #autoComplete {
+            display: none;
+            position: absolute;
+            margin-block: 1rem;
+            border: 1px solid var(--darkColor);
+            background-color: var(--lightColor);
+            color: var(--darkColor);
+            border-radius: 5px;
+            padding: 0.5rem;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.5)
+        }
+
+        #autoComplete.open {
+            display: block;
+        }
+
+        #autoComplete ul > li {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--darkColor);
+        }
+
+        .movie {
+            background-color: white;
+            padding: var(--gridPadding);
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: var(--darkColor);
+            transition: 0.3s;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .movie ._movie-thumb {
+            display: flex;
+            justify-content: center;
+        }
+
+        .movie ._movie-thumb > img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .movie .__movie-genres {
+            font-style: italic;
+        }
+
+        @media(min-width: 40rem) {
+            :root {
+                --gridCols: 3;
+            }
+
+            .movie:hover {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Simple Movie Search</h1>
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="Search for a movie">
+            <button id="searchButton">Search</button>
+        </div>
+        <div id="autoComplete">
+            <ul></ul>
+        </div>
+    </header>
+
+
+
+    <section id="results">
+        <h2>Use the search bar above to find excellent movies</h2>
+    </section>
+
+    <template id="template-movie">
+        <div class="movie">
+            <div class="_movie-thumb">
+                <img src="" />
+            </div>
+            <div>
+                <h3 class="_movie-name"></h3>
+                <div class="_movie-data">
+                    <div class="__movie-duration"></div>
+                    <div class="__movie-genres"></div>
+                    <div class="__movie-description"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script lang="application/javascript">
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resultsContainer = document.getElementById('results');
+        const autoCompleteContainer = document.getElementById('autoComplete');
+        const apiURL = 'https://movies-mock-api-s7oiqxtmzq-lz.a.run.app/api/movies';
+        const rateLimitDelay = 300;
+
+        // Listen to either click on search button or "return"-key press
+        searchButton.addEventListener('click', () => fetchMovies(searchInput.value));
+
+        // In addition to listening to "return"-key, display autocomplete when pressing key
+        searchInput.addEventListener('keypress', event => {
+            if (event.key === 'Enter') {
+                fetchMovies(searchInput.value.trim());
+                return;
+            }
+
+            // Simple throttle mechanism to limit requests
+            clearTimeout(searchInput.delayTimer);
+            searchInput.delayTimer = setTimeout(() => {
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm) {
+                    //autoComplete(searchTerm);
+                }
+            }, rateLimitDelay);
+        });
+
+        function fetchMovies(searchTerm) {
+            fetch(apiURL + '?q=' + encodeURIComponent(searchTerm))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        displayMovies(data);
+                    } else {
+                        resultsContainer.innerHTML = '<p>No movies found using your criteria</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    resultsContainer.innerHTML = '<p>Unfortunately an error occured while communicating with our service. Please try again momentarily</p>';
+                });
+        }
+
+        function autoComplete(searchTerm) {
+            fetch(apiURL + '?q=' + encodeURIComponent(searchTerm))
+                .then(response => response.json())
+                .then(data => {
+                    // TODO still
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    autoCompleteContainer.innerHTML = '<p>Unfortunately an error occured while communicating with our service. Please try again momentarily</p>';
+                });
+        }
+
+        function displayMovies(movies) {
+            resultsContainer.innerHTML = ''; // Clear previous results
+            movies.forEach(movie => {
+                const movieElement = document.getElementById('template-movie').content.cloneNode(true);
+                
+                // Set movie poster and, in the case that the image is missing or cannot be found, set a default image through error event listener
+                const moviePoster = movieElement.querySelector('._movie-thumb img');
+                moviePoster.src = movie.thumbnail;
+                moviePoster.addEventListener('error', e => {
+                    moviePoster.src = 'no-poster.jpg';
+                });
+
+                movieElement.querySelector('._movie-name').innerHTML = movie.name;
+                
+                // Convert movie duration from seconds to human-readable form with helper function
+                movieElement.querySelector('.__movie-duration').innerHTML = timeHelper(movie.duration);
+
+                // Deal with the array of genres, capitalize first letter with helper function
+                let genres = movie.genres.map(genre => capitalizationHelper(genre));
+                movieElement.querySelector('.__movie-genres').innerHTML = genres.join(', ');
+
+                movieElement.querySelector('.__movie-description').innerHTML = movie.description;
+
+                resultsContainer.appendChild(movieElement);
+            });
+        }
+
+        function timeHelper(seconds) {
+            let hours = 0 + Math.floor(seconds / 3600);
+            let minutes = 0 + Math.floor((seconds % 3600) / 60);
+
+            return hours + ' hours ' + minutes + ' minutes';
+        }
+
+        function capitalizationHelper(word) {
+            return word.charAt(0).toUpperCase() + word.substring(1);
+        }
+    </script>
+</body>
+</html>
