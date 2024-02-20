@@ -1,4 +1,5 @@
 /* Resets and sets variables */
+/* Thinking mobile-first, and then adapting to larger screens through media queries */
 :root {
     --fontFamily: system-ui, sans-serif;
     --lightColor: #F0F0F0;
@@ -84,6 +85,7 @@ header {
     grid-column: 1 / calc(var(--gridCols) + 1)
 }
 
+/* A "sort of hack" to get the autocomplete list to display centered directly below the search box and not disturb the DOM */
 #autoComplete {
     display: none;
     position: relative;
@@ -146,6 +148,7 @@ header {
     text-transform: capitalize;
 }
 
+/* On larger devices i.e. desktop browsers, expand the grid to three wide in search results */
 @media(min-width: 40rem) {
     :root {
         --gridCols: 3;

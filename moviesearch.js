@@ -2,6 +2,7 @@ const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
 const resultsContainer = document.getElementById('results');
 const autoCompleteContainer = document.getElementById('autoComplete');
+
 const apiURL = 'https://movies-mock-api-s7oiqxtmzq-lz.a.run.app/api/movies';
 const rateLimitDelay = 100;
 const maxAutoCompleteItems = 5;
@@ -16,7 +17,7 @@ searchInput.addEventListener('keydown', event => {
         return;
     }
 
-    // Simple throttle mechanism to limit requests
+    // Simple throttle mechanism to limit requests from flooding backend
     clearTimeout(searchInput.delayTimer);
     searchInput.delayTimer = setTimeout(() => {
         const searchTerm = searchInput.value.trim();
@@ -28,7 +29,7 @@ searchInput.addEventListener('keydown', event => {
     }, rateLimitDelay);
 });
 
-// Listen to clicks on document elements in order to detect clicks outside autocomplete container to close it
+// Listen to clicks on document elements in order to detect clicks outside autocomplete list to close it
 document.addEventListener('click', event => {
     if (event.target.type !== 'li') {
         autoCompleteContainer.classList.remove('open');
@@ -75,7 +76,7 @@ function autoComplete(searchTerm) {
                 const movies = data.slice(0, maxAutoCompleteItems);
 
                 movies.forEach( movie => {
-                    let movieItem = document.createElement('li');
+                    const movieItem = document.createElement('li');
 
                     movieItem.innerHTML = movie.name;
 
@@ -98,7 +99,7 @@ function autoComplete(searchTerm) {
 }
 
 function autoCompleteClick(phrase) {
-    autoCompleteContainer.classList.remove("open");
+    autoCompleteContainer.classList.remove('open');
 }
 
 function displayMovies(movies) {
@@ -109,9 +110,7 @@ function displayMovies(movies) {
         // Set movie poster and, in the case that the image is missing or cannot be found, set a default image through error event listener
         const moviePoster = movieElement.querySelector('._movie-thumb img');
         moviePoster.src = movie.thumbnail;
-        moviePoster.addEventListener('error', e => {
-            moviePoster.src = 'no-poster.jpg';
-        });
+        moviePoster.addEventListener('error', () => moviePoster.src = 'no-poster.jpg');
 
         movieElement.querySelector('._movie-name').innerHTML = movie.name;
         
@@ -128,14 +127,14 @@ function displayMovies(movies) {
 }
 
 function timeHelper(seconds) {
-    let hours = 0 + Math.floor(seconds / 3600);
-    let minutes = 0 + Math.floor((seconds % 3600) / 60);
+    const hours = 0 + Math.floor(seconds / 3600);
+    const minutes = 0 + Math.floor((seconds % 3600) / 60);
 
     return hours + ' hours ' + minutes + ' minutes';
 }
 
 function displaySpinner(target, color = '') {
-    let spinnerTemplate = document.getElementById('spinner').content.cloneNode(true);
+    const spinnerTemplate = document.getElementById('spinner').content.cloneNode(true);
 
     if (color) {
         spinnerTemplate.querySelector('.lds-spinner').classList.add(color);
